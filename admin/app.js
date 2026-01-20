@@ -1,7 +1,14 @@
-// Jika menggunakan GitHub Codespaces, ganti 'localhost:3000' dengan URL backend Anda
-const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-    ? 'http://localhost:3000/api' 
-    : `${window.location.protocol}//${window.location.host}/api`;
+// Logic otomatis untuk mendeteksi URL Backend (Local vs Codespaces)
+let API_URL = 'http://localhost:3000/api';
+
+if (window.location.hostname.includes('github.dev')) {
+    // Jika di Codespaces, kita ganti port 5500 (frontend) ke 3000 (backend)
+    const backendHost = window.location.host.replace('-5500', '-3000');
+    API_URL = `${window.location.protocol}//${backendHost}/api`;
+} else if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    // Jika sudah di hosting beneran nantinya
+    API_URL = `${window.location.protocol}//${window.location.host}/api`;
+}
 
 // --- AUTH FUNCTIONS ---
 
