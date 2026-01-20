@@ -24,7 +24,7 @@ model News {
   imageDescription String?
   highlight        String?
   content          String
-  status           String   @default("hold") // "published" or "hold"
+  status           String   @default("hold")
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 }
