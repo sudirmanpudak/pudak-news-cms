@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News Editor - News Admin Panel</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Main Quill library -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+</head>
+<body>
+    <div class="admin-layout">
+        <div class="sidebar">
+            <h2>Pudak CMS</h2>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Dashboard</a></li>
+                    <li><a href="news.html" class="active">News</a></li>
+                    <li><a href="#" onclick="logout()">Logout</a></li>
+                </ul>
+            </nav>
+        </div>
+        <div class="main-content">
+            <header>
+                <h1 id="page-title">Upload News</h1>
+                <a href="news.html" class="btn btn-secondary">Back to List</a>
+            </header>
+            
+            <div class="card">
+                <form id="news-form">
+                    <div class="form-group">
+                        <label for="title">Title</label>
+                        <input type="text" id="title" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="tag">Tag</label>
+                        <select id="tag" required>
+                            <option value="Teknologi">Teknologi</option>
+                            <option value="Internal">Internal</option>
+                            <option value="Exhibition">Exhibition</option>
+                            <option value="Event">Event</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="image">Featured Image</label>
+                        <input type="file" id="image" accept="image/*">
+                        <img id="preview" class="img-preview" src="#" alt="Preview" style="display:none;">
+                    </div>
+                    <div class="form-group">
+                        <label for="imageDescription">Image Description</label>
+                        <input type="text" id="imageDescription">
+                    </div>
+                    <div class="form-group">
+                        <label for="highlight">Highlight (Excerpt)</label>
+                        <textarea id="highlight" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Content</label>
+                        <div id="editor-container"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="status">Status</label>
+                        <select id="status">
+                            <option value="hold">Hold</option>
+                            <option value="published">Published</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save News</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include the Quill library -->
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <script src="app.js"></script>
+    <script>
+        checkAuth();
+
+        const quill = new Quill('#editor-container', {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    ['link', 'clean']
+                ]
+            }
+        });
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const newsId = urlParams.get('id');
+        const form = document.getElementById('news-form');
+        const imgInput = document.getElementById('image');
+        const preview = document.getElementById('preview');
+
+        // Image preview
+        imgInput.onchange = evt => {
+            const [file] = imgInput.files;
+            if (file) {
+                preview.src = URL.createObjectURL(file);
+                preview.style.display = 'block';
+            }
+        }
+
+        // Load news if editing
+        if (newsId) {
+            document.getElementById('page-title').innerText = 'Edit News';
+            loadNewsData();
+        }
+
+        async function loadNewsData() {
+            const news = await getNewsById(newsId);
+            document.getElementById('title').value = news.title;
+            document.getElementById('tag').value = news.tag;
+            document.getElementById('imageDescription').value = news.imageDescription || '';
+            document.getElementById('highlight').value = news.highlight || '';
+            document.getElementById('status').value = news.status;
+            quill.root.innerHTML = news.content;
+            
+            if (news.image) {
+                preview.src = getImageUrl(news.image);
+                preview.style.display = 'block';
+            }
+        }
+
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            formData.append('title', document.getElementById('title').value);
+            formData.append('tag', document.getElementById('tag').value);
+            formData.append('imageDescription', document.getElementById('imageDescription').value);
+            formData.append('highlight', document.getElementById('highlight').value);
+            formData.append('content', quill.root.innerHTML);
+            formData.append('status', document.getElementById('status').value);
+            
+            if (imgInput.files[0]) {
+                formData.append('image', imgInput.files[0]);
+            }
+
+            const method = newsId ? 'PUT' : 'POST';
+            const url = newsId ? `${API_URL}/news/${newsId}` : `${API_URL}/news`;
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: getAuthHeaders(),
+                    body: formData
+                });
+
+                if (response.ok) {
+                    alert('News saved successfully!');
+                    window.location.href = 'news.html';
+                } else {
+                    alert('Failed to save news.');
+                }
+            } catch (error) {
+                console.error('Error saving news:', error);
+            }
+        };
+    </script>
+</body>
+</html>
