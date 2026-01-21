@@ -1,5 +1,10 @@
 // Logic untuk memuat daftar berita di website utama
+<<<<<<< HEAD
 const BACKEND_URL = 'https://ALAMAT-BACKEND-ANDA.app.github.dev';
+=======
+// GANTI ALAMAT INI dengan URL Netlify Admin Anda (misal: https://pudak-admin.netlify.app)
+const BACKEND_URL = 'https://GANTI-DENGAN-URL-NETLIFY-ADMIN-ANDA.netlify.app';
+>>>>>>> 9d381ea (Final update for Netlify)
 
 async function loadNews() {
     try {
@@ -8,15 +13,26 @@ async function loadNews() {
 
         if (newsList.length === 0) return;
 
+<<<<<<< HEAD
         // 1. Ambil berita terbaru untuk Hot News
+=======
+>>>>>>> 9d381ea (Final update for Netlify)
         const hotNews = newsList[0];
         const featuredContainer = document.getElementById('featured-container');
         
         if (featuredContainer) {
+<<<<<<< HEAD
             featuredContainer.innerHTML = `
                 <article class="featured-card animate-fade-up">
                     <div class="featured-image">
                         <img src="${BACKEND_URL}${hotNews.image}" alt="${hotNews.title}">
+=======
+            const imageUrl = hotNews.image.startsWith('http') ? hotNews.image : `${BACKEND_URL}/api/images/${hotNews.image}`;
+            featuredContainer.innerHTML = `
+                <article class="featured-card animate-fade-up">
+                    <div class="featured-image">
+                        <img src="${imageUrl}" alt="${hotNews.title}">
+>>>>>>> 9d381ea (Final update for Netlify)
                         <span class="news-badge">Hot News</span>
                     </div>
                     <div class="featured-content">
@@ -34,18 +50,29 @@ async function loadNews() {
             `;
         }
 
+<<<<<<< HEAD
         // 2. Sisa berita lainnya masuk ke Grid
+=======
+>>>>>>> 9d381ea (Final update for Netlify)
         const otherNews = newsList.slice(1);
         const gridContainer = document.getElementById('news-grid-container');
         
         if (gridContainer) {
             gridContainer.innerHTML = ''; 
             otherNews.forEach(news => {
+<<<<<<< HEAD
+=======
+            const imageUrl = news.image.startsWith('http') ? news.image : `${BACKEND_URL}/api/images/${news.image}`;
+>>>>>>> 9d381ea (Final update for Netlify)
                 gridContainer.innerHTML += `
                     <article class="news-card">
                         <div class="news-image-wrapper">
                             <span class="news-category">${news.tag}</span>
+<<<<<<< HEAD
                             <img src="${BACKEND_URL}${news.image}" alt="${news.title}">
+=======
+                        <img src="${imageUrl}" alt="${news.title}">
+>>>>>>> 9d381ea (Final update for Netlify)
                         </div>
                         <div class="news-content">
                             <div class="news-date">
@@ -59,7 +86,10 @@ async function loadNews() {
                 `;
             });
         }
+<<<<<<< HEAD
 
+=======
+>>>>>>> 9d381ea (Final update for Netlify)
     } catch (error) {
         console.error('Gagal mengambil berita:', error);
     }

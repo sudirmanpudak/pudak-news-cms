@@ -1,0 +1,16 @@
+[build]
+  command = "cd server && npx prisma generate"
+  publish = "admin"
+
+[functions]
+  directory = "server/functions"
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

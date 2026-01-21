@@ -1,7 +1,5 @@
-// Jika menggunakan GitHub Codespaces, ganti 'localhost:3000' dengan URL backend Anda
-const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-    ? 'http://localhost:3000/api' 
-    : `${window.location.protocol}//${window.location.host}/api`;
+// Karena di Netlify, API dan Admin ada di domain yang sama, kita bisa pakai path relatif
+const API_URL = '/api';
 
 // --- AUTH FUNCTIONS ---
 
@@ -102,9 +100,17 @@ function formatDate(dateString) {
 // Helper to get image URL
 function getImageUrl(imagePath) {
     if (!imagePath) return 'https://via.placeholder.com/150?text=No+Image';
+<<<<<<< HEAD
     // Jika imagePath sudah diawali http/https (seperti dari Supabase), kembalikan langsung
     if (imagePath.startsWith('http')) return imagePath;
     
     const baseUrl = API_URL.replace('/api', '');
     return `${baseUrl}${imagePath}`;
+=======
+    // Jika imagePath sudah diawali http/https, kembalikan langsung
+    if (imagePath.startsWith('http')) return imagePath;
+    
+    // Jika hanya berupa key (Netlify Blobs), arahkan ke endpoint image
+    return `${API_URL}/images/${imagePath}`;
+>>>>>>> 9d381ea (Final update for Netlify)
 }

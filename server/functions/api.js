@@ -4,13 +4,17 @@ const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
+<<<<<<< HEAD:server/index.js
 const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
+=======
+const serverless = require('serverless-http');
+const { getStore } = require('@netlify/blobs');
+>>>>>>> 9d381ea (Final update for Netlify):server/functions/api.js
 require('dotenv').config();
 
 const app = express();
 const prisma = new PrismaClient();
-const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret';
 
 // Supabase Configuration
@@ -22,7 +26,11 @@ const supabase = (SUPABASE_URL && SUPABASE_KEY) ? createClient(SUPABASE_URL, SUP
 app.use(cors());
 app.use(express.json());
 
+<<<<<<< HEAD:server/index.js
 // Multer in-memory storage for Supabase upload
+=======
+// Multer in-memory storage
+>>>>>>> 9d381ea (Final update for Netlify):server/functions/api.js
 const upload = multer({ storage: multer.memoryStorage() });
 
 // Authentication middleware
@@ -39,18 +47,31 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
+// Helper to upload image to Netlify Blobs
+const uploadToBlobs = async (file) => {
+  const store = getStore('news-images');
+  const fileName = `${Date.now()}-${file.originalname}`;
+  
+  await store.set(fileName, file.buffer, {
+    contentType: file.mimetype
+  });
+
+  // Untuk Netlify Blobs, kita butuh endpoint khusus untuk membacanya
+  // atau menggunakan URL publik jika dikonfigurasi. 
+  // Agar simpel, kita simpan key-nya saja.
+  return fileName;
+};
+
+const router = express.Router();
+
 // --- AUTH ROUTES ---
-
-app.post('/api/auth/login', async (req, res) => {
+router.post('/auth/login', async (req, res) => {
   const { username, password } = req.body;
-
   try {
     const user = await prisma.user.findUnique({ where: { username } });
     if (!user) return res.status(400).json({ message: 'User not found' });
-
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) return res.status(400).json({ message: 'Invalid password' });
-
     const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: '1d' });
     res.json({ token, username: user.username });
   } catch (error) {
@@ -59,9 +80,7 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 // --- NEWS ROUTES ---
-
-// Public: Get all published news
-app.get('/api/news/public', async (req, res) => {
+router.get('/news/public', async (req, res) => {
   try {
     const news = await prisma.news.findMany({
       where: { status: 'published' },
@@ -73,24 +92,18 @@ app.get('/api/news/public', async (req, res) => {
   }
 });
 
-// Private: Get all news (for admin)
-app.get('/api/news', authenticateToken, async (req, res) => {
+router.get('/news', authenticateToken, async (req, res) => {
   try {
-    const news = await prisma.news.findMany({
-      orderBy: { createdAt: 'desc' },
-    });
+    const news = await prisma.news.findMany({ orderBy: { createdAt: 'desc' } });
     res.json(news);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 
-// Get single news
-app.get('/api/news/:id', async (req, res) => {
+router.get('/news/:id', async (req, res) => {
   try {
-    const news = await prisma.news.findUnique({
-      where: { id: parseInt(req.params.id) },
-    });
+    const news = await prisma.news.findUnique({ where: { id: parseInt(req.params.id) } });
     if (!news) return res.status(404).json({ message: 'News not found' });
     res.json(news);
   } catch (error) {
@@ -98,6 +111,7 @@ app.get('/api/news/:id', async (req, res) => {
   }
 });
 
+<<<<<<< HEAD:server/index.js
 // Helper to upload image to Supabase
 async function uploadToSupabase(file) {
   if (!supabase || !file) return null;
@@ -126,16 +140,14 @@ app.post('/api/news', authenticateToken, upload.single('image'), async (req, res
   try {
     const image = req.file ? await uploadToSupabase(req.file) : null;
     
+=======
+router.post('/news', authenticateToken, upload.single('image'), async (req, res) => {
+  const { title, tag, imageDescription, highlight, content, status } = req.body;
+  try {
+    const imageKey = req.file ? await uploadToBlobs(req.file) : null;
+>>>>>>> 9d381ea (Final update for Netlify):server/functions/api.js
     const news = await prisma.news.create({
-      data: {
-        title,
-        tag,
-        image,
-        imageDescription,
-        highlight,
-        content,
-        status: status || 'hold',
-      },
+      data: { title, tag, image: imageKey, imageDescription, highlight, content, status: status || 'hold' },
     });
     res.status(201).json(news);
   } catch (error) {
@@ -143,9 +155,9 @@ app.post('/api/news', authenticateToken, upload.single('image'), async (req, res
   }
 });
 
-// Update news
-app.put('/api/news/:id', authenticateToken, upload.single('image'), async (req, res) => {
+router.put('/news/:id', authenticateToken, upload.single('image'), async (req, res) => {
   const { title, tag, imageDescription, highlight, content, status } = req.body;
+<<<<<<< HEAD:server/index.js
   const updateData = {
     title,
     tag,
@@ -164,51 +176,65 @@ app.put('/api/news/:id', authenticateToken, upload.single('image'), async (req, 
       where: { id: parseInt(req.params.id) },
       data: updateData,
     });
+=======
+  const updateData = { title, tag, imageDescription, highlight, content, status };
+  try {
+    if (req.file) {
+      updateData.image = await uploadToBlobs(req.file);
+    }
+    const news = await prisma.news.update({ where: { id: parseInt(req.params.id) }, data: updateData });
+>>>>>>> 9d381ea (Final update for Netlify):server/functions/api.js
     res.json(news);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 
-// Delete news
-app.delete('/api/news/:id', authenticateToken, async (req, res) => {
+// Endpoint untuk mengambil gambar dari Blobs
+router.get('/images/:key', async (req, res) => {
   try {
-    await prisma.news.delete({
-      where: { id: parseInt(req.params.id) },
-    });
+    const store = getStore('news-images');
+    const blob = await store.get(req.params.key, { type: 'blob' });
+    if (!blob) return res.status(404).send('Image not found');
+    
+    res.setHeader('Content-Type', blob.type);
+    const buffer = Buffer.from(await blob.arrayBuffer());
+    res.send(buffer);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+});
+
+router.delete('/news/:id', authenticateToken, async (req, res) => {
+  try {
+    await prisma.news.delete({ where: { id: parseInt(req.params.id) } });
     res.json({ message: 'News deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 
-// Toggle status
-app.patch('/api/news/:id/status', authenticateToken, async (req, res) => {
+router.patch('/news/:id/status', authenticateToken, async (req, res) => {
   const { status } = req.body;
   try {
-    const news = await prisma.news.update({
-      where: { id: parseInt(req.params.id) },
-      data: { status },
-    });
+    const news = await prisma.news.update({ where: { id: parseInt(req.params.id) }, data: { status } });
     res.json(news);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 
-// Stats for dashboard
-app.get('/api/stats', authenticateToken, async (req, res) => {
+router.get('/stats', authenticateToken, async (req, res) => {
   try {
     const totalNews = await prisma.news.count();
     const publishedNews = await prisma.news.count({ where: { status: 'published' } });
     const holdNews = await prisma.news.count({ where: { status: 'hold' } });
-    
     res.json({ totalNews, publishedNews, holdNews });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
+app.use('/api', router);
+
+module.exports.handler = serverless(app);
